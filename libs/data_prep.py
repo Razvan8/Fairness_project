@@ -2,7 +2,7 @@
 
 from ucimlrepo import fetch_ucirepo
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 
@@ -16,6 +16,11 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score, train_test_split
 import matplotlib.pyplot as plt
 import numpy as np
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import GridSearchCV
 
 ###
 def load_data(verbose=False):
@@ -95,7 +100,36 @@ def find_best_model(model, param_grid, X_train, y_train,verbosee=True):
     best_model = grid_search.best_estimator_
     grid_search_accuracy = grid_search.best_score_
     if verbosee== True:
-        print(f"Accuracy for best model is grid_search_accuracy{grid_search_accuracy}")
+        print(f"Accuracy for best grid search {model} is : {grid_search_accuracy}")
     return best_model, best_params
+
+from sklearn.metrics import confusion_matrix
+
+def eq_op_dif(y_true,y_predicted, sensitive_attribute):
+    """
+    Compute Equal Opportunity fairness metric.
+
+    Parameters:
+    y_predicted (array-like): Predicted labels (0 or 1).
+    y_true (array-like): True labels (0 or 1).
+    sensitive_attribute (array-like): Binary sensitive attribute (0 or 1).
+
+    Returns:
+    float: Equal Opportunity score (0 to 1).
+    """
+
+    # Confusion matrices for different groups (privileged and unprivileged)
+    cm_privileged = confusion_matrix(y_true[sensitive_attribute == 1], y_predicted[sensitive_attribute == 1])
+    cm_unprivileged = confusion_matrix(y_true[sensitive_attribute == 0], y_predicted[sensitive_attribute == 0])
+
+    # Calculate True Positive Rates (TPR)
+    TPR_privileged = cm_privileged[1, 1] / (cm_privileged[1, 0] + cm_privileged[1, 1]) if cm_privileged[1, 1] + cm_privileged[1, 0] > 0 else 0
+    TPR_unprivileged = cm_unprivileged[1, 1] / (cm_unprivileged[1, 0] + cm_unprivileged[1, 1]) if cm_unprivileged[1, 1] + cm_unprivileged[1, 0] > 0 else 0
+
+    # Calculate Equal Opportunity score
+    equal_opportunity_score = abs(TPR_privileged - TPR_unprivileged)
+
+    return equal_opportunity_score
+
 
 
