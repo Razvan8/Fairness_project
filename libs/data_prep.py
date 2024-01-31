@@ -125,6 +125,13 @@ def load_German_dataset(verbose=False):
     assert y.shape[0]==1000, 'Smth went wrong y should have 1000 rows'
     print("Data loaded successfully")
 
+    #Store data such that reviewer can access it without internet connection
+    # Define the folder path
+
+
+    # Ensure the folder exists, create it if not
+    os.makedirs(folder_path, exist_ok=True)
+
     if verbose == True:
         print(f"Variables : {statlog_german_credit_data.variables}")
         print("print X.head()")
@@ -134,6 +141,12 @@ def load_German_dataset(verbose=False):
         print(y.head(3))
     return X, y
 
+def load_German_dataset_offline(verbose=True):
+    dataframes_directory = os.path.join('..', 'Dataframes', 'German_credit')
+    X=pd.read_csv(os.path.join(dataframes_directory, 'X_German.csv'))
+    y=pd.read_csv(os.path.join(dataframes_directory, 'y_German.csv'))
+    print("Data loaded sucessfully")
+    return X,y
 
 
 

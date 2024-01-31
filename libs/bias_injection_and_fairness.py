@@ -2,7 +2,7 @@ from imported_libraries import *
 from data_prep import *
 from basic_visualizations import *
 
-
+np.random.seed(123)
 
 ###BIAS AND FAIRNESS##############################################################################################
 def eq_op_dif(y_true, y_predicted, sensitive_attribute, no_abs=False):
@@ -70,8 +70,8 @@ def fairness_optimizer_results(threshold_optimizer, X_fit, y_fit, X_obs, y_obs, 
         threshold_optimizer.predict_method = 'auto'
         threshold_optimizer.fit(X_fit, y_train, sensitive_features=sensitive_1_fit)
 
-    adjusted_sensitive_train = threshold_optimizer.predict(X_fit, sensitive_features=sensitive_1_fit)
-    adjusted_sensitive_val = threshold_optimizer.predict(X_obs, sensitive_features=sensitive_1_obs)
+    adjusted_sensitive_train = threshold_optimizer.predict(X_fit, sensitive_features=sensitive_1_fit, random_state=123)
+    adjusted_sensitive_val = threshold_optimizer.predict(X_obs, sensitive_features=sensitive_1_obs, random_state=123)
 
     initial_acc_train, initial_acc_test, after_acc_train, after_acc_test = accuracy_score(y_fit,y_train), accuracy_score(y_obs, y_val),\
         accuracy_score(adjusted_sensitive_train, y_train), accuracy_score(adjusted_sensitive_val, y_val)
@@ -103,8 +103,8 @@ def use_fairness_optimizer(threshold_optimizer, X_fit, y_fit, X_obs, y_obs, y_tr
         threshold_optimizer.predict_method = 'auto'
         threshold_optimizer.fit(X_fit, y_train, sensitive_features=sensitive_1_fit)
 
-    adjusted_sensitive_train = threshold_optimizer.predict(X_fit, sensitive_features=sensitive_1_fit, random_state=1)
-    adjusted_sensitive_val = threshold_optimizer.predict(X_obs, sensitive_features=sensitive_1_obs, random_state=1)
+    adjusted_sensitive_train = threshold_optimizer.predict(X_fit, sensitive_features=sensitive_1_fit, random_state=123)
+    adjusted_sensitive_val = threshold_optimizer.predict(X_obs, sensitive_features=sensitive_1_obs, random_state=123)
 
     print(f"--------- SCORES AFTER OPTIMIZING FOR {name_1} ---------")
     print()
@@ -147,6 +147,7 @@ def add_bias(X, y, unprivileged_class_name, unprivileged_class_value, p, verbose
         unprivileged class values = int value for unprivileged (e.g. 0 or 1)
         p=probability to keep
          returns the biased data (X,y)'''
+    np.random.seed(123)
     # Identify samples with the unprivileged class
     unprivileged_samples = X[X[unprivileged_class_name] == unprivileged_class_value]  # samples to drop form
     y_indexes = y[y["class"] == 1]
@@ -548,10 +549,10 @@ def create_iterative_german_bias(X, y, unprivileged_class_name1="Age_group", unp
             cat_features = [col_name for col_name in X.columns if col_name not in num_features]
             Xc = pd.get_dummies(Xc, columns=cat_features, drop_first=True)
 
-            X_train, X_test, y_train, y_test = train_test_split(Xc, yc, test_size=0.4, random_state=123)
+            X_train, X_test, y_train, y_test = train_test_split(Xc, yc, test_size=0.4, random_state=12)
 
             X_val, X_test, y_val, y_test = train_test_split(X_test, y_test,
-                                                            test_size=0.5)  ##this make 0.2 for both val and test
+                                                            test_size=0.5, random_state=12)  ##this make 0.2 for both val and test
 
             ## Save sensitive attributes
 

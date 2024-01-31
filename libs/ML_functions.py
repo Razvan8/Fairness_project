@@ -88,7 +88,7 @@ def find_best_threshold( y, y_pred_proba, verbose= True):
 
     return best_threshold
 
-def create_save_iterative_german_models(p_range1=[0.2,0.5,0.8], p_range2=[0.2,0.5,0.8], dataset_name="German_credit_biased",verbose=True):
+def create_save_iterative_german_models(p_range1=[0.2,0.5,0.8], p_range2=[0.25], dataset_name="German_credit_biased",verbose=True):
     '''Function that stores the best ML model for every biased dataset created'''
     for p1 in p_range1:
         for p2 in p_range2:
