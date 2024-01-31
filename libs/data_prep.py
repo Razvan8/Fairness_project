@@ -1,8 +1,9 @@
 from imported_libraries import *
+
 ###Store data###
 def store_data(X_train_with_A, X_val_with_A, X_test_with_A, y_train, y_val, y_test, age=None, gender=None, education=None,dataset_name='', sufix_name=''):
     ''' Function that takes as input dataframes for predictors, values to be predicted, sensitive features, and stores them in csv file
-        Storing them allows someone else to get fairness related results without loosing time on running the preprocessing steps
+        Storing them allows someone else to get fairness related results without loosing time on running the preprocessing steps.
 
     '''
     if education != None :
@@ -91,9 +92,9 @@ def load_stored_data( age=None, gender=None, education=None,dataset_name='', sca
         ed_val = pd.read_csv(os.path.join(dataframes_directory, f'education_val{sufix_name}.csv')).values.reshape(-1)
         ed_test = pd.read_csv(os.path.join(dataframes_directory, f'education_test{sufix_name}.csv')).values.reshape(-1)
 
-    if scale == True: ############################## TAKE CARE NOT TO SCALE SENS ATTRIBUTES THAT ARE CONSIDERED CLASSES############################
+    if scale == True:
         X_train_with_A, X_val_with_A, X_test_with_A= scale_dataframes(
-            [X_train_with_A, X_val_with_A, X_test_with_A]) ###scale all dfs ##Take care scale keeps 0,1 true # MinMax works well
+            [X_train_with_A, X_val_with_A, X_test_with_A]) ###scale all dfs ##Take care to use MinMaxScaler
 
 
 
@@ -145,28 +146,14 @@ def load_German_dataset_offline(verbose=True):
     dataframes_directory = os.path.join('..', 'Dataframes', 'German_credit')
     X=pd.read_csv(os.path.join(dataframes_directory, 'X_German.csv'))
     y=pd.read_csv(os.path.join(dataframes_directory, 'y_German.csv'))
+    assert X.shape[0] == 1000, "Smth went wrong X should have 1000 rows"
+    assert y.shape[0] == 1000, 'Smth went wrong y should have 1000 rows'
     print("Data loaded sucessfully")
     return X,y
 
 
 
-def merge_two_dataframes(X_train, X_val, y_train, y_val): 
-    """
-    Merge the training and validation datasets.
 
-    Parameters:
-    - X_train, X_val: Training and validation features
-    - y_train, y_val: Training and validation labels
-
-    Returns:
-    - X_train_val, y_train_val: Merged training and validation sets
-    """
-    X_train_val = np.concatenate((X_train, X_val), axis=0)
-    y_train_val = np.concatenate((y_train, y_val), axis=0)
-
-    return X_train_val, y_train_val
-
-####
 def replace_values_with_binary(df, column_name, values_list):
     '''Function that checks all values from a column. It replaces the values with 1 if they are in a specified list, else 0 '''
 
@@ -192,7 +179,7 @@ assert df['B'].equals(pd.Series([1, 1, 0, 1, 0])), "Function replace_values_with
 
 
 
-###
+
 
 
 
@@ -210,6 +197,9 @@ def apply_function_to_column(df, column_name, test_function,new_name):
 
 
 def scale_dataframes(list_of_dfs):
+    '''
+    Function that scales a list of dataframes with MinMaxScaler
+    '''
     scaled_dfs = []  # List to store the scaled DataFrames
 
     for df in list_of_dfs:

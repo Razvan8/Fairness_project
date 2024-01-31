@@ -1,7 +1,9 @@
-
-###### ML functions#########################################################################################################
+###### ML functions
 from imported_libraries import *
 from data_prep import *
+
+# Obs: X_train_A means that we include the sensitive features. In papers the authors use 'A' for the sensitive features so I kept using it to mark this.
+
 
 def find_best_model(model, param_grid, X_train, y_train, X_val, y_val, verbose= True):
     """
@@ -50,46 +52,15 @@ def find_best_model(model, param_grid, X_train, y_train, X_val, y_val, verbose= 
 
 
 
-def find_best_model_old(model, param_grid, X_train, y_train,verbosee=True): ### probabbly delete this
-
-    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, scoring='accuracy', cv=5)
-    grid_search.fit(X_train, y_train)
-    best_params = grid_search.best_params_
-    best_model = grid_search.best_estimator_
-    grid_search_accuracy = grid_search.best_score_
-    if verbosee== True:
-        print(f"Accuracy for best grid search {model} is : {grid_search_accuracy}")
-    return best_model, best_params
-
-
-from sklearn.metrics import accuracy_score
-
-def find_best_threshold( y, y_pred_proba, verbose= True):
-    '''Function that finds best threshold to convert probabilities in 0 or 1'''
-    y_scores = y_pred_proba[:, 1]  # Assuming the probability for class 1 is at index 1
-
-    thresholds = np.arange(0, 1, 0.05)  # Threshold values to test
-    accuracies = []
-
-    for threshold in thresholds:
-        y_pred = (y_scores > threshold).astype(int)
-        accuracy = accuracy_score(y, y_pred)
-        accuracies.append(accuracy)
-
-    best_threshold = thresholds[np.argmax(accuracies)]
-
-    if verbose == True:
-        plt.plot(thresholds, accuracies, marker='o')
-        plt.xlabel('Threshold')
-        plt.ylabel('Accuracy')
-        plt.title('Accuracy at Different Thresholds')
-        plt.show()
-        print(f"Best treshold is {best_threshold} and best score is {np.max(accuracies)}")
-
-    return best_threshold
 
 def create_save_iterative_german_models(p_range1=[0.2,0.5,0.8], p_range2=[0.25], dataset_name="German_credit_biased",verbose=True):
-    '''Function that stores the best ML model for every biased dataset created'''
+    '''Function that stores the best ML model for every biased dataset created
+    It is an iterative version of find_best_model over all the biased datasets'''
+
+
+    assert all(0 <= value <= 1 for value in p_range1), "Values in p_range1 should be between 0 and 1 since they are probabilities"
+    assert all(0 <= value <= 1 for value in p_range2), "Values in p_range2 should be between 0 and 1 since they are probabilities"
+
     for p1 in p_range1:
         for p2 in p_range2:
             X_train_with_A, X_val_with_A, X_test_with_A, y_train, y_val, y_test, age_train, age_val, age_test,gender_train, \
@@ -97,7 +68,7 @@ def create_save_iterative_german_models(p_range1=[0.2,0.5,0.8], p_range2=[0.25],
                                                                                     scale=True,sufix_name=f'_{p1}_{p2}')
             #########MODEL
 
-            ############# find best model
+            ############# find best model iterative - I let the grids for the other models as comment just to show that I tried more models in the beginning.
 
             #param_grid_rf = {
                 #'n_estimators': [10, 50, 100],
@@ -119,7 +90,7 @@ def create_save_iterative_german_models(p_range1=[0.2,0.5,0.8], p_range2=[0.25],
                 'C': [0.001, 0.01, 0.1, 1,10,20,50],
                 'penalty': ['l2',
                             ],
-                'max_iter' : [1000] ##dont optimize over this. Just make sure lr converges in general!!
+                'max_iter' : [1000] ## I don't optimize over this. Just make sure lr converges in general!!
 
             }
 

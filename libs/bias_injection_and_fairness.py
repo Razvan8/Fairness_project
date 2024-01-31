@@ -44,7 +44,7 @@ def eq_op_dif(y_true, y_predicted, sensitive_attribute, no_abs=False):
 result = eq_op_dif( pd.DataFrame(np.array([1,0,0,1]), columns=['class']), np.array([1,0,0,1]), np.array([True, True, False, False])  )
 
 # Assert statement
-assert result<=0.000001, "Equal Opportunity difference should be between 0 in this case"
+assert result<=0.000001, "Equal Opportunity difference should be 0 in this case"
 ## I put 0.000001 instead of 0 just in case of small numerical intsability. Probably works with 0 too.
 
 
@@ -65,6 +65,8 @@ def fairness_optimizer_results(threshold_optimizer, X_fit, y_fit, X_obs, y_obs, 
       X_fit, y_fit= the data used as train for fitting fairness optimizer
       X_obs, y_obs = validation for fairness optimizer
       y_fit, y_obs= predicted y's before optimizer '''
+
+    assert name_1 != name_2, "We should have 2 different features"
 
     if fitted == False:
         threshold_optimizer.predict_method = 'auto'
@@ -97,7 +99,10 @@ def use_fairness_optimizer(threshold_optimizer, X_fit, y_fit, X_obs, y_obs, y_tr
       y_train, y_val = true y
       X_fit, y_fit= the data used as train for fitting fairness optimizer
       X_obs, y_obs = validation for fairness optimizer
-      y_fit, y_obs= predicted y's before optimizer '''
+      y_fit, y_obs= predicted y's before optimizer
+      It displays the results'''
+
+    assert name_1 != name_2, "We should have 2 different features"
 
     if fitted == False:
         threshold_optimizer.predict_method = 'auto'
@@ -137,10 +142,10 @@ def use_fairness_optimizer(threshold_optimizer, X_fit, y_fit, X_obs, y_obs, y_tr
     print()
     print()
 
-################################## functions to add bias
+################################## function to add bias
 
 
-def add_bias(X, y, unprivileged_class_name, unprivileged_class_value, p, verbose=True):
+def add_bias(X, y, unprivileged_class_name, unprivileged_class_value, p, verbose=False):
     ''' X = predictors dataframe
         y = values to predict
         unprivileged_class_name = str of unprivileged class
@@ -177,86 +182,6 @@ def add_bias(X, y, unprivileged_class_name, unprivileged_class_value, p, verbose
     return X, y
 
 
-def find_trend(data_fairness_age, data_fairness_gender, data_accuracy, correlation_test, ls_p_vary, vary_age=True, p_fixed=0.25):
-    '''
-    data_fairness_age, gender, acc should be from the same set (i.e. all training/test)
-    first position in tuple is for age, second for gender
-    It shows how fairness is influenced by the parameter of the bias addition to the data (used more as a sanity check for the method that biases the data)
-    '''
-    if vary_age == True:
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(data_fairness_age[(p_vary, p_fixed)])  ## Fairness age
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t age")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f" Age correlation: {correlation_test(ls_p_vary, vals)}")
-
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(data_fairness_gender[(p_vary, p_fixed)])  ## Fairness gender
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t age")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f" Gender correlation: {spearmanr(ls_p_vary, vals)}")  # gender
-
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(data_accuracy[(p_vary, p_fixed)])  ## Fairness age
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Accuracy")
-        plt.xlabel("probability of keeping positive samples w.r.t age")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f"Accuracy correlation: {spearmanr(ls_p_vary, vals)}")
-        print()
-        print()
-
-
-    else:  # vary gender
-
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(data_fairness_age[(p_fixed, p_vary)])  ## Fairness age
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t gender")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f"Age correlation: {correlation_test(ls_p_vary, vals)}")
-
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(data_fairness_gender[(p_fixed, p_vary)])  ## Fairness gender
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t gender")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f" Gender correlation: {correlation_test(ls_p_vary, vals)}")
-
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(data_accuracy[(p_fixed, p_vary)])  ## Accuracy
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Accuracy")
-        plt.xlabel("probability of keeping positive samples w.r.t gender")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f"Accuracy correlation: {correlation_test(ls_p_vary, vals)}")
-        print()
-        print()
-
 
 ##MAIN FUNCTION THAT ANALYSIS FAIRNES CORRELATION WITH ACCURACY OR FAIRNESS FOR ANOTHER SENSITIVE FEATURE
 def find_trend_optimization(before_fairness_age, before_fairness_gender, before_accuracy, after_fairness_age,
@@ -264,7 +189,7 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
                             size1=0, size2=0, p_fixed = 0.25):
     '''
     data_fairness_age, gender, acc should be from the same set (i.e. all training/test)
-    first position in tuple is for age, second for gender
+    first position in tuple is for age, second for gender ((p1,p2) means p1 - probability of keeping positive samples w.r.t age and p2 w.r.t gender)
     Take care! Optimization is done w.r.t what we vary. I.e, vary age fairness, optimize w.r.t age
 
     The function can compute the following:
@@ -278,14 +203,14 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
     if std == True:
         assert size1 > 0 and size2 > 0, "Both sizes must be positive"
     if vary_age == True:
-        print("Vary age and optimize w.r.t age")
+        print("-----Vary age and optimize w.r.t age-----")
         print()
 
         vals_age = []
         margin_of_error = []
         for p_vary in ls_p_vary:
             vals_age.append(
-                after_fairness_age[(p_vary, p_fixed)] - before_fairness_age[(p_vary, p_fixed)])  ## Fairness age
+                before_fairness_age[(p_vary, p_fixed)] - after_fairness_age[(p_vary, p_fixed)])  ## Fairness age
             if std == True:
                 margin_of_error.append(
                     deviation_for_CI(size1=size1, size2=size2, p1=before_fairness_age[(p_vary, p_fixed)],
@@ -295,7 +220,7 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
         if std == True:
             plt.fill_between(ls_p_vary, np.array(vals_age) - np.array(margin_of_error),
                              np.array(vals_age) + np.array(margin_of_error), alpha=0.2, label='CI')
-        plt.ylabel("Eq op dif")
+        plt.ylabel("AGE - Decrease in Eq op dif after optimization")
         plt.xlabel("probability of keeping positive samples w.r.t age")
         plt.title("Correlation analysis")
         plt.show()
@@ -307,7 +232,7 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
         margin_of_error = []
 
         for p_vary in ls_p_vary:
-            vals_gender.append(after_fairness_gender[(p_vary, p_fixed)] - before_fairness_gender[
+            vals_gender.append(before_fairness_gender[(p_vary, p_fixed)] - after_fairness_gender[
                 (p_vary, p_fixed)])  ## Fairness gender
             if std == True:
                 margin_of_error.append(
@@ -319,7 +244,7 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
             plt.fill_between(ls_p_vary, np.array(vals_gender) - np.array(margin_of_error),
                              np.array(vals_gender) + np.array(margin_of_error), alpha=0.2, label='CI')
 
-        plt.ylabel("Eq op dif")
+        plt.ylabel("GENDER - Decrease in Eq op dif after optimization")
         plt.xlabel("probability of keeping positive samples w.r.t age")
         plt.title("Correlation analysis")
         plt.show()
@@ -339,19 +264,20 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
             plt.fill_between(ls_p_vary, np.array(vals_acc) - np.array(margin_of_error),
                              np.array(vals_acc) + np.array(margin_of_error), alpha=0.2, label='CI')
 
-        plt.ylabel("Accuracy")
+        plt.ylabel("Increase in Accuracy after optimization")
         plt.xlabel("probability of keeping positive samples w.r.t age")
         plt.title("Correlation analysis")
         plt.show()
         print(
             f" Correlation between probability of keeping positive samples w.r.t age and accuracy increase: {correlation_test(ls_p_vary, vals_acc)}")
+
         print()
 
         print(f"-- RESULTS ABOUT CORRELATION BETWEEN FAIRNESS AND ACC --")
         print(
-            f"Coorelation between age fairness improvement and gender fairness : {correlation_test(vals_age, vals_gender)}")
+            f"Coorelation between age fairness improvement and gender fairness improvement : {correlation_test(vals_age, vals_gender)}")
         print(
-            f"Coorelation between age fairness improvement and accuracy : {correlation_test(vals_age, vals_acc)}")  # we do only gender and acc bc we optimize w.r.t gender
+            f"Coorelation between age fairness improvement and accuracy improvement : {correlation_test(vals_age, vals_acc)}")  # we do only gender and acc bc we optimize w.r.t gender
         print()
         print()
 
@@ -359,7 +285,7 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
 
     else:  # vary gender
 
-        print("Vary gender and optimize w.r.t gender")
+        print("-----Vary gender and optimize w.r.t gender-----")
         print()
 
         vals_age = []
@@ -370,13 +296,13 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
                     deviation_for_CI(size1=size1, size2=size2, p1=before_fairness_age[(p_fixed, p_vary)],
                                      p2=after_fairness_age[(p_fixed, p_vary)], alpha=0.05))
             vals_age.append(
-                after_fairness_age[(p_fixed, p_vary)] - before_fairness_age[(p_fixed, p_vary)])  ## Fairness age
+                before_fairness_age[(p_fixed, p_vary)] - after_fairness_age[(p_fixed, p_vary)])  ## Fairness age
 
         plt.plot(ls_p_vary, vals_age)
         if std == True:
             plt.fill_between(ls_p_vary, np.array(vals_age) - np.array(margin_of_error),
                              np.array(vals_age) + np.array(margin_of_error), alpha=0.2, label='CI')
-        plt.ylabel("Eq op dif")
+        plt.ylabel("AGE - Decrease in Eq op dif after optimization")
         plt.xlabel("probability of keeping positive samples w.r.t gender")
         plt.title("Correlation analysis")
         plt.show()
@@ -390,14 +316,14 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
                 margin_of_error.append(
                     deviation_for_CI(size1=size1, size2=size2, p1=before_fairness_gender[(p_fixed, p_vary)],
                                      p2=after_fairness_gender[(p_fixed, p_vary)], alpha=0.05))
-            vals_gender.append(after_fairness_gender[(p_fixed, p_vary)] - before_fairness_gender[
+            vals_gender.append(before_fairness_gender[(p_fixed, p_vary)] - after_fairness_gender[
                 (p_fixed, p_vary)])  ## Fairness gender
 
         plt.plot(ls_p_vary, vals_gender)
         if std == True:
             plt.fill_between(ls_p_vary, np.array(vals_gender) - np.array(margin_of_error),
                              np.array(vals_gender) + np.array(margin_of_error), alpha=0.2, label='CI')
-        plt.ylabel("Eq op dif")
+        plt.ylabel("GENDER - Decrease in Eq op dif after optimization")
         plt.xlabel("probability of keeping positive samples w.r.t gender")
         plt.title("Correlation analysis")
         plt.show()
@@ -416,114 +342,27 @@ def find_trend_optimization(before_fairness_age, before_fairness_gender, before_
         if std == True:
             plt.fill_between(ls_p_vary, np.array(vals_acc) - np.array(margin_of_error),
                              np.array(vals_acc) + np.array(margin_of_error), alpha=0.2, label='CI')
-        plt.ylabel("Accuracy")
+        plt.ylabel("Increase in Accuracy after optimization")
         plt.xlabel("probability of keeping positive samples w.r.t gender")
         plt.title("Correlation analysis")
         plt.show()
         print(
-            f"Correlation between probability of keeping positive samples w.r.t gender and accuracy increase:: {correlation_test(ls_p_vary, vals_acc)}")
+            f"Correlation between probability of keeping positive samples w.r.t gender and accuracy increase: {correlation_test(ls_p_vary, vals_acc)}")
         print()
 
         print(f"-- RESULTS ABOUT CORRELATION BETWEEN FAIRNESS AND ACC --")
         print(
-            f"Coorelation between gender fairness improvement and age fairness : {correlation_test(vals_gender, vals_age)}")
+            f"Coorelation between gender fairness improvement and age fairness improvement : {correlation_test(vals_gender, vals_age)}")
         print(
-            f"Coorelation between gender fairness improvement and accuracy : {correlation_test(vals_gender, vals_acc)}")  # we do only gender and acc bc we optimize w.r.t gender
+            f"Coorelation between gender fairness improvement and accuracy improvement : {correlation_test(vals_gender, vals_acc)}")  # we do only gender and acc bc we optimize w.r.t gender
         print()
         print()
 
 
-####Accuracy fairness correlation backup
-
-def find_trend_optimization_backup(before_fairness_age, before_fairness_gender, before_accuracy, after_fairness_age,
-                                   after_fairness_gender, after_accuracy, correlation_test, ls_p_vary, vary_age=True):
-    '''
-    data_fairness_age, gender, acc should be from the same set (i.e. all training/test)
-    first position in tuple is for age, second for gender
-    '''
-    if vary_age == True:
-        p_fixed = 1  # Fix no drop in positive samples w.r.t gender
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(after_fairness_age[(p_vary, p_fixed)] - before_fairness_age[(p_vary, p_fixed)])  ## Fairness age
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t age")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f" Age correlation: {correlation_test(ls_p_vary, vals)}")
-
-        p_fixed = 1  # Fix no drop in positive samples w.r.t age  (keep it fixed)
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(after_fairness_gender[(p_vary, p_fixed)] - before_fairness_gender[
-                (p_vary, p_fixed)])  ## Fairness gender
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t age")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f" Gender correlation: {spearmanr(ls_p_vary, vals)}")  # gender
-
-        p2 = 1  # Fix no drop in positive samples w.r.t age  (keep it fixed)
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(after_accuracy[(p_vary, p_fixed)] - before_accuracy[(p_vary, p_fixed)])  ## Fairness age
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Accuracy")
-        plt.xlabel("probability of keeping positive samples w.r.t age")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f"Accuracy correlation: {spearmanr(ls_p_vary, vals)}")
-        print()
-        print()
 
 
-    else:  # vary gender
 
-        p_fixed = 1  # Fix no drop in positive samples w.r.t gender
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(after_fairness_age[(p_fixed, p_vary)] - before_fairness_age[(p_fixed, p_vary)])  ## Fairness age
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t gender")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f"Age correlation: {correlation_test(ls_p_vary, vals)}")
-
-        p_fixed = 1  # Fix no drop in positive samples w.r.t age  (keep it fixed)
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(after_fairness_gender[(p_fixed, p_vary)] - before_fairness_gender[
-                (p_fixed, p_vary)])  ## Fairness gender
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Eq op dif")
-        plt.xlabel("probability of keeping positive samples w.r.t gender")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f" Gender correlation: {correlation_test(ls_p_vary, vals)}")
-
-        p_fixed = 1  # Fix no drop in positive samples w.r.t age  (keep it fixed)
-        vals = []
-        for p_vary in ls_p_vary:
-            vals.append(after_accuracy[(p_fixed, p_vary)] - before_accuracy[(p_fixed, p_vary)])  ## Accuracy
-
-        plt.plot(ls_p_vary, vals)
-        plt.ylabel("Accuracy")
-        plt.xlabel("probability of keeping positive samples w.r.t gender")
-        plt.title("Correlation analysis")
-        plt.show()
-        print(f"Accuracy correlation: {correlation_test(ls_p_vary, vals)}")
-        print()
-        print()
-
-
+## Function that creates biased datasets in an iterative way for different levels of bias
 def create_iterative_german_bias(X, y, unprivileged_class_name1="Age_group", unprivileged_class_name2="Gender",
                                  unprivileged_class_value1=0, unprivileged_class_value2=0,
                                  p_range1=[0.2, 0.5, 0.8], p_range2=[0.2, 0.5, 0.8], verbose=True,
@@ -533,16 +372,17 @@ def create_iterative_german_bias(X, y, unprivileged_class_name1="Age_group", unp
        p_range1 is the bias range for age
        p_range2 is the bias range for gender
        class 1 is Age
-       class 2 is Gender'''
+       class 2 is Gender
+       It stores all these datasets'''
 
     for p1 in p_range1:
         for p2 in p_range2:
             Xc, yc = add_bias(X=X, unprivileged_class_name=unprivileged_class_name1,
                               unprivileged_class_value=unprivileged_class_value1, y=y, p=p1,
-                              verbose=True)  # Age bias
+                              verbose= False)  # Age bias
             Xc, yc = add_bias(X=Xc, unprivileged_class_name=unprivileged_class_name2,
                               unprivileged_class_value=unprivileged_class_value2, y=yc, p=p2,
-                              verbose=True)  # Gender bias
+                              verbose= False)  # Gender bias
 
             num_features = ["Attribute2", "Attribute5", "Attribute8", "Attribute11", "Attribute13", "Attribute16",
                             "Attribute18"]
@@ -552,7 +392,7 @@ def create_iterative_german_bias(X, y, unprivileged_class_name1="Age_group", unp
             X_train, X_test, y_train, y_test = train_test_split(Xc, yc, test_size=0.4, random_state=12)
 
             X_val, X_test, y_val, y_test = train_test_split(X_test, y_test,
-                                                            test_size=0.5, random_state=12)  ##this make 0.2 for both val and test
+                                                            test_size=0.5, random_state=12)  ##this make 0.2 for both val and test as in paper given as model
 
             ## Save sensitive attributes
 

@@ -1,2 +1,0 @@
-Termina de salvat modele iterative
-apoi mlp predictions iterative

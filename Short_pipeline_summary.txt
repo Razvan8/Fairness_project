@@ -1,0 +1,12 @@
+Short description of the main ipynb files
+
+Data_prep_ML_German_dataset.ipynb: This file stores the entire German Datset and does the preproceesing part and ML part necessary for fairness analysis. It also stores the necesssary csv files and ML model
+
+Fairness_analysis_German_dataset.ipynb: This file does the fairness analysis for the entire German dataset. It has all results
+
+Data_prep_ML_German_biased.ipynb: This file stores all the biased datasets and does the preproceesing part and ML part necessary for fairness analysis. It also stores the necesssary csv files and ML models for every biased dataset.
+
+Fairness_analysis_German_biased.ipynb: This file does the fairness analysis for all the biased datasets. It has all the important plots and results.
+
+
+Remark: Similar behaviour is for the 2 ipynb files for the appendix dataset
